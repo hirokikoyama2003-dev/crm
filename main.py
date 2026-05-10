@@ -45,14 +45,20 @@ async def auth_middleware(request: Request, call_next):
 # デバッグ用エンドポイント（問題解決後に削除）
 @app.get("/_debug")
 async def debug_info():
+    import glob
     db_url = os.environ.get("DATABASE_URL", "NOT SET")
+    # ファイル一覧確認
+    all_files = glob.glob("**/*", recursive=True)
+    template_files = [f for f in all_files if "template" in f.lower()]
     return JSONResponse({
         "db_url_set": bool(os.environ.get("DATABASE_URL")),
         "db_url_prefix": db_url[:40] + "..." if len(db_url) > 40 else db_url,
         "vercel": os.environ.get("VERCEL", "not set"),
         "cwd": os.getcwd(),
-        "python_path": sys.path[:3],
         "init_error": _init_error,
+        "login_template_exists": os.path.exists("templates/auth/login.html"),
+        "templates_dir_exists": os.path.exists("templates"),
+        "template_files": template_files[:20],
     })
 
 
