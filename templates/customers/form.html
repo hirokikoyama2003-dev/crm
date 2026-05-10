@@ -161,7 +161,30 @@
           <div class="col-md-3">{{ select_field("購入目的", "purchase_purpose", purchase_purposes, customer.purchase_purpose if customer else "") }}</div>
           <div class="col-md-3">{{ select_field("購入予定時期", "planned_purchase_period", planned_periods, customer.planned_purchase_period if customer else "") }}</div>
           <div class="col-md-3">{{ select_field("希望物件種別", "desired_property_type", property_types, customer.desired_property_type if customer else "") }}</div>
-          <div class="col-md-3">{{ select_field("希望間取り", "desired_floor_plan", floor_plans, customer.desired_floor_plan if customer else "") }}</div>
+          <div class="col-md-3">
+            {% set _fp = (customer.desired_floor_plan or '') if customer else '' %}
+            {% set _fp_parts = _fp.split('〜') %}
+            {% set _fp_min = _fp_parts[0] if _fp_parts|length >= 2 else '' %}
+            {% set _fp_max = _fp_parts[-1] if _fp else '' %}
+            <div class="mb-3">
+              <label class="form-label fw-semibold" style="font-size:0.82rem;">希望間取り</label>
+              <div class="d-flex align-items-center gap-1">
+                <select name="desired_floor_plan_min" class="form-select form-select-sm">
+                  <option value="">下限なし</option>
+                  {% for opt in floor_plans %}
+                  <option value="{{ opt }}" {% if _fp_min == opt %}selected{% endif %}>{{ opt }}</option>
+                  {% endfor %}
+                </select>
+                <span class="text-muted small px-1">〜</span>
+                <select name="desired_floor_plan_max" class="form-select form-select-sm">
+                  <option value="">上限なし</option>
+                  {% for opt in floor_plans %}
+                  <option value="{{ opt }}" {% if _fp_max == opt %}selected{% endif %}>{{ opt }}</option>
+                  {% endfor %}
+                </select>
+              </div>
+            </div>
+          </div>
           <div class="col-md-4">{{ field("購入希望エリア", "desired_area", customer.desired_area if customer else "", placeholder="〇〇市・〇〇区など") }}</div>
           <div class="col-md-8">
             <div class="mb-3">

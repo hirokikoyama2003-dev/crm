@@ -25,7 +25,7 @@ CONTACT_TYPE_LABELS = {
 
 PROPERTY_TYPES = ["一戸建て", "マンション", "土地", "土地+建物", "投資用", "その他"]
 FLOOR_PLANS = ["1K", "1DK", "1LDK", "2LDK", "3LDK", "4LDK", "4LDK以上"]
-RESIDENCE_TYPES = ["自己所有マンション", "自己所有戸建", "賃貸マンション", "賃貸アパート", "賃貸戸建"]
+RESIDENCE_TYPES = ["自己所有マンション", "自己所有戸建", "賃貸マンション", "賃貸アパート", "賃貸戸建", "公営賃貸マンション", "社宅", "その他"]
 PURCHASE_PURPOSES = ["自己居住", "投資", "親族用", "その他"]
 PLANNED_PERIODS = ["3ヶ月以内", "6ヶ月以内", "1年以内", "2年以内", "未定"]
 INFLOW_SOURCES = ["ポータルサイト", "チラシ", "紹介", "看板", "SNS", "電話問い合わせ", "来店", "その他"]
@@ -40,6 +40,14 @@ def _parse_int(val: str) -> Optional[int]:
     return int(val) if val else None
 
 
+def _combine_floor_plan(min_val: str, max_val: str) -> str:
+    """希望間取りの最小・最大を "2LDK〜3LDK" 形式に結合する。同じ値なら単独表記。"""
+    mn, mx = min_val.strip(), max_val.strip()
+    if mn and mx and mn != mx:
+        return f"{mn}〜{mx}"
+    return mx or mn
+
+
 def _customer_from_form(
     name, email, phone, birth_date, best_contact_time,
     postal_code, prefecture, city, address, current_residence_type,
@@ -51,7 +59,7 @@ def _customer_from_form(
     desired_property_type, desired_area, desired_area_memo,
     desired_rail_line, desired_rail_line_memo, max_station_distance,
     budget_max, desired_land_area_max, desired_floor_area_max,
-    desired_floor_plan, purchase_conditions_memo,
+    desired_floor_plan_min, desired_floor_plan_max, purchase_conditions_memo,
     num_adults, num_children, child_age_1, child_age_2, child_age_3, num_cars,
     household_company, household_industry, household_income,
     spouse_company, spouse_industry, spouse_income,
@@ -81,7 +89,8 @@ def _customer_from_form(
         budget_max=_parse_int(budget_max),
         desired_land_area_max=_parse_int(desired_land_area_max),
         desired_floor_area_max=_parse_int(desired_floor_area_max),
-        desired_floor_plan=desired_floor_plan, purchase_conditions_memo=purchase_conditions_memo,
+        desired_floor_plan=_combine_floor_plan(desired_floor_plan_min, desired_floor_plan_max),
+        purchase_conditions_memo=purchase_conditions_memo,
         num_adults=_parse_int(num_adults), num_children=_parse_int(num_children),
         child_age_1=_parse_int(child_age_1), child_age_2=_parse_int(child_age_2),
         child_age_3=_parse_int(child_age_3), num_cars=_parse_int(num_cars),
@@ -104,7 +113,7 @@ FORM_DEFAULTS = dict(
     desired_property_type="", desired_area="", desired_area_memo="",
     desired_rail_line="", desired_rail_line_memo="", max_station_distance="",
     budget_max="", desired_land_area_max="", desired_floor_area_max="",
-    desired_floor_plan="", purchase_conditions_memo="",
+    desired_floor_plan_min="", desired_floor_plan_max="", purchase_conditions_memo="",
     num_adults="", num_children="", child_age_1="", child_age_2="", child_age_3="", num_cars="",
     household_company="", household_industry="", household_income="",
     spouse_company="", spouse_industry="", spouse_income="",
