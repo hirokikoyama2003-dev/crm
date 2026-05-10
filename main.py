@@ -29,10 +29,6 @@ async def global_exception_handler(request: Request, exc: Exception):
         "traceback": tb,
     })
 
-# セッションミドルウェア（署名付きCookie）
-SECRET_KEY = os.environ.get("SESSION_SECRET", "local-dev-secret-change-in-production")
-app.add_middleware(SessionMiddleware, secret_key=SECRET_KEY)
-
 app.mount("/static", StaticFiles(directory="static"), name="static")
 
 app.include_router(auth.router)
@@ -43,6 +39,10 @@ app.include_router(settings.router)
 
 
 # 認証ミドルウェア: /login と /static と /_debug 以外は要ログイン
+# ※ @app.middleware("http") は add_middleware より先に定義する必要がある
+#   （Starlette は後から追加したものが外側＝先に実行されるため、
+#     SessionMiddleware を最後に add_middleware することで外側に配置し
+#     auth_middleware より先にセッションを初期化する）
 @app.middleware("http")
 async def auth_middleware(request: Request, call_next):
     path = request.url.path
@@ -51,6 +51,13 @@ async def auth_middleware(request: Request, call_next):
     if not request.session.get("user"):
         return RedirectResponse("/login", status_code=302)
     return await call_next(request)
+
+
+# セッションミドルウェア（署名付きCookie）
+# ※ auth_middleware の後に add_middleware することで外側（先に実行）になり
+#   session が初期化された状態で auth_middleware が動く
+SECRET_KEY = os.environ.get("SESSION_SECRET", "local-dev-secret-change-in-production")
+app.add_middleware(SessionMiddleware, secret_key=SECRET_KEY)
 
 
 # デバッグ用エンドポイント（問題解決後に削除）
