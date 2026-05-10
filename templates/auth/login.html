@@ -8,56 +8,106 @@
   <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" rel="stylesheet">
   <style>
     body {
-      background: #1a2340;
+      background: linear-gradient(160deg, #1B5E42 0%, #2D9367 60%, #4DC494 100%);
       min-height: 100vh;
       display: flex;
       align-items: center;
       justify-content: center;
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Hiragino Sans', sans-serif;
+    }
+    body::before {
+      content: '';
+      position: fixed;
+      top: -120px; right: -100px;
+      width: 420px; height: 420px;
+      background: rgba(255,255,255,0.07);
+      border-radius: 50%;
+      pointer-events: none;
+    }
+    body::after {
+      content: '';
+      position: fixed;
+      bottom: -80px; left: -80px;
+      width: 300px; height: 300px;
+      background: rgba(255,255,255,0.05);
+      border-radius: 50%;
+      pointer-events: none;
     }
     .login-card {
       background: #fff;
-      border-radius: 16px;
-      box-shadow: 0 8px 32px rgba(0,0,0,0.3);
-      padding: 2.5rem 2rem;
+      border-radius: 22px;
+      box-shadow: 0 20px 60px rgba(0,0,0,0.2);
+      padding: 2.6rem 2.2rem 2rem;
       width: 100%;
       max-width: 380px;
+      position: relative;
+      z-index: 1;
     }
-    .brand {
-      color: #1a2340;
-      font-size: 1.3rem;
-      font-weight: 700;
+    .brand-icon {
+      width: 60px; height: 60px;
+      background: linear-gradient(135deg, #1B5E42, #40BF8A);
+      border-radius: 16px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin: 0 auto 1rem;
+      font-size: 1.6rem;
+      color: #fff;
+    }
+    .brand-title {
+      font-size: 1.2rem;
+      font-weight: 800;
+      color: #1A2A22;
       text-align: center;
-      margin-bottom: 0.3rem;
+      margin-bottom: 0.2rem;
     }
     .brand-sub {
-      color: #6c757d;
-      font-size: 0.85rem;
+      font-size: 0.78rem;
+      color: #6B8F7A;
       text-align: center;
-      margin-bottom: 2rem;
+      margin-bottom: 1.8rem;
     }
-    .form-label { font-size: 0.88rem; font-weight: 600; color: #444; }
+    .form-label { font-size: 0.82rem; font-weight: 600; color: #3A5A48; }
+    .form-control {
+      border-radius: 10px;
+      border: 1.5px solid #D4E8DC;
+      padding: 0.6rem 0.85rem;
+      font-size: 0.92rem;
+    }
+    .form-control:focus {
+      border-color: #40BF8A;
+      box-shadow: 0 0 0 3px rgba(64,191,138,0.15);
+    }
     .btn-login {
-      background: #1a2340;
+      background: linear-gradient(135deg, #1B5E42, #2D9367);
       color: #fff;
       border: none;
       width: 100%;
-      padding: 0.65rem;
-      border-radius: 8px;
+      padding: 0.7rem;
+      border-radius: 12px;
       font-size: 0.95rem;
-      font-weight: 600;
-      margin-top: 0.5rem;
-      transition: background 0.15s;
+      font-weight: 700;
+      margin-top: 0.3rem;
+      transition: opacity 0.15s, transform 0.15s;
     }
-    .btn-login:hover { background: #2e3d5e; color: #fff; }
+    .btn-login:hover { opacity: 0.9; transform: translateY(-1px); color: #fff; }
+    .alert-danger {
+      background: #FFECEC;
+      border: none;
+      border-radius: 10px;
+      color: #C0392B;
+      font-size: 0.84rem;
+    }
   </style>
 </head>
 <body>
   <div class="login-card">
-    <div class="brand"><i class="bi bi-people-fill me-2"></i>顧客管理CRM</div>
+    <div class="brand-icon"><i class="bi bi-people-fill"></i></div>
+    <div class="brand-title">顧客管理CRM</div>
     <div class="brand-sub">不動産営業 追客システム</div>
 
     {% if error %}
-    <div class="alert alert-danger py-2 px-3 mb-3" style="font-size:0.88rem;">
+    <div class="alert alert-danger py-2 px-3 mb-3">
       <i class="bi bi-exclamation-circle me-1"></i>{{ error }}
     </div>
     {% endif %}
@@ -65,11 +115,13 @@
     <form method="post" action="/login">
       <div class="mb-3">
         <label class="form-label">ログインID</label>
-        <input type="text" name="username" class="form-control" placeholder="IDを入力" autofocus required>
+        <input type="text" name="username" class="form-control"
+               placeholder="IDを入力" autofocus required>
       </div>
-      <div class="mb-3">
+      <div class="mb-4">
         <label class="form-label">パスワード</label>
-        <input type="password" name="password" class="form-control" placeholder="パスワードを入力" required>
+        <input type="password" name="password" class="form-control"
+               placeholder="パスワードを入力" required>
       </div>
       <button type="submit" class="btn-login">
         <i class="bi bi-box-arrow-in-right me-1"></i>ログイン
