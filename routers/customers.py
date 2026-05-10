@@ -25,11 +25,11 @@ CONTACT_TYPE_LABELS = {
 
 PROPERTY_TYPES = ["一戸建て", "マンション", "土地", "土地+建物", "投資用", "その他"]
 FLOOR_PLANS = ["1K", "1DK", "1LDK", "2LDK", "3LDK", "4LDK", "4LDK以上"]
-RESIDENCE_TYPES = ["賃貸", "持ち家", "社宅", "実家", "その他"]
+RESIDENCE_TYPES = ["自己所有マンション", "自己所有戸建", "賃貸", "持ち家", "社宅", "実家", "その他"]
 PURCHASE_PURPOSES = ["自己居住", "投資", "親族用", "その他"]
 PLANNED_PERIODS = ["3ヶ月以内", "6ヶ月以内", "1年以内", "2年以内", "未定"]
 INFLOW_SOURCES = ["ポータルサイト", "チラシ", "紹介", "看板", "SNS", "電話問い合わせ", "来店", "その他"]
-RESPONSE_TYPES = ["メール", "電話", "来店", "チャット", "紹介", "その他"]
+RESPONSE_TYPES = ["会員登録", "物件リクエスト", "土地リクエスト", "未公開", "メルマガ登録", "プレミアムクラブ", "電話", "メール", "紹介", "その他"]
 
 
 def _parse_date(val: str) -> Optional[date_type]:
