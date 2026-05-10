@@ -18,6 +18,17 @@ from routers import auth
 
 app = FastAPI(title="顧客管理システム")
 
+# グローバル例外ハンドラー（デバッグ用）
+@app.exception_handler(Exception)
+async def global_exception_handler(request: Request, exc: Exception):
+    tb = traceback.format_exc()
+    return JSONResponse(status_code=500, content={
+        "error": str(exc),
+        "type": type(exc).__name__,
+        "path": str(request.url),
+        "traceback": tb,
+    })
+
 # セッションミドルウェア（署名付きCookie）
 SECRET_KEY = os.environ.get("SESSION_SECRET", "local-dev-secret-change-in-production")
 app.add_middleware(SessionMiddleware, secret_key=SECRET_KEY)
