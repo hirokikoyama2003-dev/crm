@@ -6,19 +6,39 @@ os.chdir(os.path.dirname(os.path.abspath(__file__)))
 sys.path.insert(0, os.getcwd())
 
 import uvicorn
-from fastapi import FastAPI
+from fastapi import FastAPI, Request
+from fastapi.responses import RedirectResponse
 from fastapi.staticfiles import StaticFiles
+from starlette.middleware.sessions import SessionMiddleware
 from database import engine, SessionLocal
 from models import Base, Rank, EmailTemplate, LifecycleStage
 from routers import dashboard, customers, history, settings
+from routers import auth
 
 app = FastAPI(title="顧客管理システム")
+
+# セッションミドルウェア（署名付きCookie）
+SECRET_KEY = os.environ.get("SESSION_SECRET", "local-dev-secret-change-in-production")
+app.add_middleware(SessionMiddleware, secret_key=SECRET_KEY)
+
 app.mount("/static", StaticFiles(directory="static"), name="static")
 
+app.include_router(auth.router)
 app.include_router(dashboard.router)
 app.include_router(customers.router)
 app.include_router(history.router)
 app.include_router(settings.router)
+
+
+# 認証ミドルウェア: /login と /static 以外は要ログイン
+@app.middleware("http")
+async def auth_middleware(request: Request, call_next):
+    path = request.url.path
+    if path.startswith("/login") or path.startswith("/static"):
+        return await call_next(request)
+    if not request.session.get("user"):
+        return RedirectResponse("/login", status_code=302)
+    return await call_next(request)
 
 
 def init_db():
