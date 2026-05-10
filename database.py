@@ -10,12 +10,12 @@ DATABASE_URL = os.environ.get("DATABASE_URL", "sqlite:///./crm.db")
 if DATABASE_URL.startswith("postgres://"):
     DATABASE_URL = DATABASE_URL.replace("postgres://", "postgresql://", 1)
 
+# Supabase PostgreSQL には SSL 必須 → URL に直接付加（connect_args より確実）
+if not DATABASE_URL.startswith("sqlite") and "sslmode" not in DATABASE_URL:
+    DATABASE_URL += "?sslmode=require"
+
 # SQLite のみ check_same_thread が必要
-# Supabase（PostgreSQL）は SSL 必須
-if DATABASE_URL.startswith("sqlite"):
-    connect_args = {"check_same_thread": False}
-else:
-    connect_args = {"sslmode": "require"}
+connect_args = {"check_same_thread": False} if DATABASE_URL.startswith("sqlite") else {}
 
 engine = create_engine(DATABASE_URL, connect_args=connect_args)
 

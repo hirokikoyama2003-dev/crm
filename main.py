@@ -1,5 +1,6 @@
 import os
 import sys
+import traceback
 
 # 実行場所によらず crm/ を作業ディレクトリにする
 os.chdir(os.path.dirname(os.path.abspath(__file__)))
@@ -7,7 +8,7 @@ sys.path.insert(0, os.getcwd())
 
 import uvicorn
 from fastapi import FastAPI, Request
-from fastapi.responses import RedirectResponse
+from fastapi.responses import RedirectResponse, JSONResponse
 from fastapi.staticfiles import StaticFiles
 from starlette.middleware.sessions import SessionMiddleware
 from database import engine, SessionLocal
@@ -30,15 +31,29 @@ app.include_router(history.router)
 app.include_router(settings.router)
 
 
-# 認証ミドルウェア: /login と /static 以外は要ログイン
+# 認証ミドルウェア: /login と /static と /_debug 以外は要ログイン
 @app.middleware("http")
 async def auth_middleware(request: Request, call_next):
     path = request.url.path
-    if path.startswith("/login") or path.startswith("/static"):
+    if path.startswith("/login") or path.startswith("/static") or path.startswith("/_debug"):
         return await call_next(request)
     if not request.session.get("user"):
         return RedirectResponse("/login", status_code=302)
     return await call_next(request)
+
+
+# デバッグ用エンドポイント（問題解決後に削除）
+@app.get("/_debug")
+async def debug_info():
+    db_url = os.environ.get("DATABASE_URL", "NOT SET")
+    return JSONResponse({
+        "db_url_set": bool(os.environ.get("DATABASE_URL")),
+        "db_url_prefix": db_url[:40] + "..." if len(db_url) > 40 else db_url,
+        "vercel": os.environ.get("VERCEL", "not set"),
+        "cwd": os.getcwd(),
+        "python_path": sys.path[:3],
+        "init_error": _init_error,
+    })
 
 
 def init_db():
@@ -89,7 +104,14 @@ def init_db():
         db.close()
 
 
-init_db()
+# DB 初期化（失敗してもアプリは起動させる）
+_init_error = None
+try:
+    init_db()
+except Exception as e:
+    _init_error = traceback.format_exc()
+    print(f"[CRM] DB init error: {_init_error}")
+
 
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 8000))
