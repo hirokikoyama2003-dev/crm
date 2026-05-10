@@ -1,0 +1,58 @@
+{% extends "base.html" %}
+{% block title %}ランク設定 - 顧客管理CRM{% endblock %}
+{% block page_title %}ランク設定{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+  <h5 class="fw-bold mb-0">ランク設定</h5>
+</div>
+<p class="text-muted" style="font-size:0.88rem;">各ランクの名称・説明・推奨接触頻度・バッジ色を変更できます。</p>
+
+<div class="row g-3">
+  {% for rank in ranks %}
+  <div class="col-md-6">
+    <div class="card">
+      <div class="card-header py-2 px-3 d-flex align-items-center gap-2">
+        <span class="badge bg-{{ rank.color }} fs-6">{{ rank.label }}</span>
+        <span class="fw-semibold">{{ rank.name }}</span>
+      </div>
+      <div class="card-body">
+        <form action="/settings/ranks/{{ rank.id }}/update" method="post">
+          <div class="mb-3">
+            <label class="form-label fw-semibold" style="font-size:0.82rem;">ランク名称</label>
+            <input type="text" name="name" class="form-control form-control-sm" value="{{ rank.name }}" required>
+          </div>
+          <div class="mb-3">
+            <label class="form-label fw-semibold" style="font-size:0.82rem;">説明</label>
+            <textarea name="description" rows="2" class="form-control form-control-sm">{{ rank.description }}</textarea>
+          </div>
+          <div class="mb-3">
+            <label class="form-label fw-semibold" style="font-size:0.82rem;">推奨接触頻度</label>
+            <input type="text" name="contact_frequency" class="form-control form-control-sm"
+                   value="{{ rank.contact_frequency }}" placeholder="例: 週1〜2回">
+          </div>
+          <div class="mb-3">
+            <label class="form-label fw-semibold" style="font-size:0.82rem;">バッジ色</label>
+            <div class="d-flex flex-wrap gap-2">
+              {% for val, label in color_options %}
+              <div class="form-check form-check-inline">
+                <input class="form-check-input" type="radio" name="color"
+                       id="color_{{ rank.id }}_{{ val }}" value="{{ val }}"
+                       {% if rank.color == val %}checked{% endif %}>
+                <label class="form-check-label" for="color_{{ rank.id }}_{{ val }}">
+                  <span class="badge bg-{{ val }}">{{ label }}</span>
+                </label>
+              </div>
+              {% endfor %}
+            </div>
+          </div>
+          <button type="submit" class="btn btn-primary btn-sm">
+            <i class="bi bi-check me-1"></i> 保存
+          </button>
+        </form>
+      </div>
+    </div>
+  </div>
+  {% endfor %}
+</div>
+{% endblock %}

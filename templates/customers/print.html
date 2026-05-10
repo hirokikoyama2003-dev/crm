@@ -1,0 +1,157 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <title>顧客カルテ - {{ customer.name }}</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: 'Hiragino Kaku Gothic Pro', 'Meiryo', sans-serif; font-size: 10pt; color: #222; background: #fff; }
+    .page { width: 210mm; min-height: 297mm; padding: 12mm 14mm; margin: 0 auto; }
+    h1 { font-size: 14pt; border-bottom: 2px solid #1a2340; padding-bottom: 4px; margin-bottom: 10px; color: #1a2340; }
+    .meta { font-size: 8pt; color: #666; margin-bottom: 12px; }
+    .section { margin-bottom: 10px; }
+    .section-title { font-size: 9pt; font-weight: bold; background: #1a2340; color: #fff; padding: 3px 8px; margin-bottom: 0; }
+    table { width: 100%; border-collapse: collapse; font-size: 9pt; }
+    table td, table th { border: 1px solid #ccc; padding: 3px 6px; vertical-align: top; }
+    table th { background: #f0f2f7; font-weight: 600; width: 30%; color: #444; white-space: nowrap; }
+    .rank-badge { display: inline-block; background: #333; color: #fff; border-radius: 3px; padding: 1px 6px; font-size: 8pt; font-weight: bold; }
+    .rank-A { background: #dc3545; }
+    .rank-B { background: #ffc107; color: #333; }
+    .rank-C { background: #0d6efd; }
+    .rank-D { background: #6c757d; }
+    .history-table { font-size: 8.5pt; }
+    .history-table th { width: auto; }
+    .two-col { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+    @media print {
+      body { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+      .no-print { display: none; }
+    }
+    .print-btn { position: fixed; top: 10px; right: 10px; padding: 8px 16px; background: #1a2340; color: #fff; border: none; border-radius: 6px; cursor: pointer; font-size: 12px; }
+  </style>
+</head>
+<body>
+<button class="print-btn no-print" onclick="window.print()">🖨️ 印刷する</button>
+
+<div class="page">
+  <h1>顧客カルテ &nbsp;
+    {% if customer.rank %}
+    <span class="rank-badge rank-{{ customer.rank.label }}">{{ customer.rank.label }}ランク {{ customer.rank.name }}</span>
+    {% endif %}
+  </h1>
+  <div class="meta">出力日: {{ today }} ／ 担当: {{ customer.assigned_to or '―' }}</div>
+
+  <div class="two-col">
+    <!-- 基本情報 -->
+    <div class="section">
+      <div class="section-title">基本情報</div>
+      <table>
+        <tr><th>氏名</th><td><strong>{{ customer.name }}</strong></td></tr>
+        <tr><th>メール</th><td>{{ customer.email or '―' }}</td></tr>
+        <tr><th>電話</th><td>{{ customer.phone or '―' }}</td></tr>
+        <tr><th>生年月日</th><td>{{ customer.birth_date or '―' }}</td></tr>
+        <tr><th>連絡可能時間</th><td>{{ customer.best_contact_time or '―' }}</td></tr>
+        <tr><th>住所</th><td>{% if customer.prefecture %}〒{{ customer.postal_code }} {{ customer.prefecture }}{{ customer.city }}{{ customer.address }}{% else %}―{% endif %}</td></tr>
+        <tr><th>居住種別</th><td>{{ customer.current_residence_type or '―' }}</td></tr>
+      </table>
+    </div>
+
+    <!-- 流入情報 -->
+    <div class="section">
+      <div class="section-title">流入・反響情報</div>
+      <table>
+        <tr><th>初回コンタクト日</th><td>{{ customer.first_contact_date or '―' }}</td></tr>
+        <tr><th>流入元</th><td>{{ customer.first_inflow_source or '―' }}</td></tr>
+        <tr><th>反響種別</th><td>{{ customer.first_response_type or '―' }}</td></tr>
+        <tr><th>紹介業者</th><td>{{ customer.referral_agency or '―' }}</td></tr>
+        <tr><th>問い合わせ物件</th><td>{{ customer.inquiry_property_name or '―' }}{% if customer.inquiry_property_price %} ({{ "{:,}".format(customer.inquiry_property_price) }}万円){% endif %}</td></tr>
+      </table>
+    </div>
+  </div>
+
+  <div class="two-col" style="margin-top:8px;">
+    <!-- 購入希望条件 -->
+    <div class="section">
+      <div class="section-title">購入希望条件</div>
+      <table>
+        <tr><th>購入目的</th><td>{{ customer.purchase_purpose or '―' }}</td></tr>
+        <tr><th>購入動機</th><td>{{ customer.purchase_motivation or '―' }}</td></tr>
+        <tr><th>購入予定時期</th><td>{{ customer.planned_purchase_period or '―' }}</td></tr>
+        <tr><th>希望物件種別</th><td>{{ customer.desired_property_type or '―' }}</td></tr>
+        <tr><th>希望間取り</th><td>{{ customer.desired_floor_plan or '―' }}</td></tr>
+        <tr><th>予算（最大）</th><td>{% if customer.budget_max %}{{ "{:,}".format(customer.budget_max) }}万円{% else %}―{% endif %}</td></tr>
+        <tr><th>希望エリア</th><td>{{ customer.desired_area or '―' }}</td></tr>
+        <tr><th>希望路線</th><td>{{ customer.desired_rail_line or '―' }}</td></tr>
+        <tr><th>駅距離</th><td>{% if customer.max_station_distance %}{{ customer.max_station_distance }}分以内{% else %}―{% endif %}</td></tr>
+        <tr><th>土地面積</th><td>{% if customer.desired_land_area_max %}{{ customer.desired_land_area_max }}㎡以内{% else %}―{% endif %}</td></tr>
+        <tr><th>延床面積</th><td>{% if customer.desired_floor_area_max %}{{ customer.desired_floor_area_max }}㎡以内{% else %}―{% endif %}</td></tr>
+      </table>
+    </div>
+
+    <!-- 家族・世帯 -->
+    <div class="section">
+      <div class="section-title">家族・世帯情報</div>
+      <table>
+        <tr><th>大人/子供</th><td>{{ customer.num_adults or '―' }}人 / {{ customer.num_children or '―' }}人</td></tr>
+        <tr><th>子供年齢</th><td>
+          {% if customer.child_age_1 %}{{ customer.child_age_1 }}歳{% endif %}
+          {% if customer.child_age_2 %} / {{ customer.child_age_2 }}歳{% endif %}
+          {% if customer.child_age_3 %} / {{ customer.child_age_3 }}歳{% endif %}
+          {% if not customer.child_age_1 %}―{% endif %}
+        </td></tr>
+        <tr><th>車所有台数</th><td>{% if customer.num_cars %}{{ customer.num_cars }}台{% else %}―{% endif %}</td></tr>
+        <tr><th>会社（世帯主）</th><td>{{ customer.household_company or '―' }}</td></tr>
+        <tr><th>業種（世帯主）</th><td>{{ customer.household_industry or '―' }}</td></tr>
+        <tr><th>年収（世帯主）</th><td>{% if customer.household_income %}{{ "{:,}".format(customer.household_income) }}万円{% else %}―{% endif %}</td></tr>
+        <tr><th>会社（配偶者）</th><td>{{ customer.spouse_company or '―' }}</td></tr>
+        <tr><th>業種（配偶者）</th><td>{{ customer.spouse_industry or '―' }}</td></tr>
+        <tr><th>年収（配偶者）</th><td>{% if customer.spouse_income %}{{ "{:,}".format(customer.spouse_income) }}万円{% else %}―{% endif %}</td></tr>
+      </table>
+      <div class="section-title" style="margin-top:6px;">次回コンタクト・営業状況</div>
+      <table>
+        <tr><th>次回コンタクト日</th><td><strong>{{ customer.next_contact_date or '―' }}</strong></td></tr>
+        <tr><th>ライフサイクル</th><td>{{ customer.lifecycle_stage or '―' }}</td></tr>
+        <tr><th>売却活動</th><td>{{ customer.sale_activity_status or '―' }}</td></tr>
+        <tr><th>賃貸更新時期</th><td>{{ customer.rental_renewal_date or '―' }}</td></tr>
+      </table>
+    </div>
+  </div>
+
+  {% if customer.purchase_conditions_memo or customer.memo %}
+  <div class="section" style="margin-top:8px;">
+    <div class="section-title">メモ・条件備考</div>
+    <table>
+      {% if customer.purchase_conditions_memo %}
+      <tr><th>購入条件メモ</th><td style="white-space:pre-wrap;">{{ customer.purchase_conditions_memo }}</td></tr>
+      {% endif %}
+      {% if customer.memo %}
+      <tr><th>備考</th><td style="white-space:pre-wrap;">{{ customer.memo }}</td></tr>
+      {% endif %}
+    </table>
+  </div>
+  {% endif %}
+
+  <!-- コンタクト履歴 -->
+  {% if customer.contact_history %}
+  <div class="section" style="margin-top:8px;">
+    <div class="section-title">コンタクト履歴（直近{{ [customer.contact_history|length, 15]|min }}件）</div>
+    <table class="history-table">
+      <tr>
+        <th style="width:18%;">日時</th>
+        <th style="width:12%;">種別</th>
+        <th style="width:12%;">担当者</th>
+        <th>内容</th>
+      </tr>
+      {% for h in customer.contact_history[:15] %}
+      <tr>
+        <td>{{ h.contacted_at.strftime('%Y/%m/%d %H:%M') }}</td>
+        <td>{{ contact_type_labels.get(h.contact_type, h.contact_type) }}</td>
+        <td>{{ h.created_by or '―' }}</td>
+        <td style="white-space:pre-wrap;">{{ h.content }}</td>
+      </tr>
+      {% endfor %}
+    </table>
+  </div>
+  {% endif %}
+</div>
+</body>
+</html>

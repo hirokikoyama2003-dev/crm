@@ -1,0 +1,255 @@
+{% extends "base.html" %}
+{% block title %}{% if customer %}{{ customer.name }} 編集{% else %}新規顧客追加{% endif %} - 顧客管理CRM{% endblock %}
+{% block page_title %}{% if customer %}顧客編集{% else %}新規顧客追加{% endif %}{% endblock %}
+
+{% block content %}
+<div class="d-flex align-items-center gap-2 mb-4">
+  <a href="{% if customer %}/customers/{{ customer.id }}{% else %}/customers/{% endif %}" class="btn btn-outline-secondary btn-sm">
+    <i class="bi bi-arrow-left"></i>
+  </a>
+  <h5 class="fw-bold mb-0">{% if customer %}{{ customer.name }} を編集{% else %}新規顧客追加{% endif %}</h5>
+</div>
+
+{% macro field(label, name, value="", type="text", placeholder="", required=false) %}
+<div class="mb-3">
+  <label class="form-label fw-semibold" style="font-size:0.82rem;">
+    {{ label }}{% if required %} <span class="text-danger">*</span>{% endif %}
+  </label>
+  <input type="{{ type }}" name="{{ name }}" class="form-control form-control-sm"
+         value="{{ value }}" placeholder="{{ placeholder }}" {% if required %}required{% endif %}>
+</div>
+{% endmacro %}
+
+{% macro select_field(label, name, options, current="") %}
+<div class="mb-3">
+  <label class="form-label fw-semibold" style="font-size:0.82rem;">{{ label }}</label>
+  <select name="{{ name }}" class="form-select form-select-sm">
+    <option value="">選択...</option>
+    {% for opt in options %}
+    <option value="{{ opt }}" {% if current == opt %}selected{% endif %}>{{ opt }}</option>
+    {% endfor %}
+  </select>
+</div>
+{% endmacro %}
+
+<form method="post" action="{% if customer %}/customers/{{ customer.id }}/edit{% else %}/customers/new{% endif %}">
+<div class="accordion" id="formAccordion">
+
+  <!-- ① 基本情報 -->
+  <div class="accordion-item border-0 mb-3 shadow-sm rounded">
+    <h2 class="accordion-header">
+      <button class="accordion-button rounded fw-semibold" type="button" data-bs-toggle="collapse" data-bs-target="#sec1">
+        <i class="bi bi-person-fill me-2 text-primary"></i> 基本情報
+      </button>
+    </h2>
+    <div id="sec1" class="accordion-collapse collapse show" data-bs-parent="#formAccordion">
+      <div class="accordion-body">
+        <div class="row g-3">
+          <div class="col-md-4">{{ field("氏名", "name", customer.name if customer else "", required=true, placeholder="山田 太郎") }}</div>
+          <div class="col-md-4">{{ field("メールアドレス", "email", customer.email if customer else "", type="email", placeholder="example@email.com") }}</div>
+          <div class="col-md-4">{{ field("電話番号", "phone", customer.phone if customer else "", placeholder="090-0000-0000") }}</div>
+          <div class="col-md-3">{{ field("生年月日", "birth_date", customer.birth_date if customer else "", type="date") }}</div>
+          <div class="col-md-4">{{ field("連絡の繋がりやすい時間帯", "best_contact_time", customer.best_contact_time if customer else "", placeholder="例: 平日19時以降") }}</div>
+          <div class="col-md-3">
+            {{ select_field("居住物件種別", "current_residence_type", residence_types, customer.current_residence_type if customer else "") }}
+          </div>
+        </div>
+        <div class="row g-3">
+          <div class="col-md-2">{{ field("郵便番号", "postal_code", customer.postal_code if customer else "", placeholder="123-4567") }}</div>
+          <div class="col-md-2">
+            <div class="mb-3">
+              <label class="form-label fw-semibold" style="font-size:0.82rem;">都道府県</label>
+              <select name="prefecture" class="form-select form-select-sm">
+                <option value="">選択...</option>
+                {% for pref in ['北海道','青森県','岩手県','宮城県','秋田県','山形県','福島県','茨城県','栃木県','群馬県','埼玉県','千葉県','東京都','神奈川県','新潟県','富山県','石川県','福井県','山梨県','長野県','岐阜県','静岡県','愛知県','三重県','滋賀県','京都府','大阪府','兵庫県','奈良県','和歌山県','鳥取県','島根県','岡山県','広島県','山口県','徳島県','香川県','愛媛県','高知県','福岡県','佐賀県','長崎県','熊本県','大分県','宮崎県','鹿児島県','沖縄県'] %}
+                <option value="{{ pref }}" {% if customer and customer.prefecture == pref %}selected{% endif %}>{{ pref }}</option>
+                {% endfor %}
+              </select>
+            </div>
+          </div>
+          <div class="col-md-4">{{ field("市区町村", "city", customer.city if customer else "", placeholder="〇〇市〇〇区") }}</div>
+          <div class="col-md-4">{{ field("番地・建物名", "address", customer.address if customer else "", placeholder="1-2-3 〇〇マンション101") }}</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ② 流入・反響情報 -->
+  <div class="accordion-item border-0 mb-3 shadow-sm rounded">
+    <h2 class="accordion-header">
+      <button class="accordion-button collapsed rounded fw-semibold" type="button" data-bs-toggle="collapse" data-bs-target="#sec2">
+        <i class="bi bi-funnel-fill me-2 text-success"></i> 流入・反響情報
+      </button>
+    </h2>
+    <div id="sec2" class="accordion-collapse collapse">
+      <div class="accordion-body">
+        <div class="row g-3">
+          <div class="col-md-3">{{ field("初回コンタクト日", "first_contact_date", customer.first_contact_date if customer else "", type="date") }}</div>
+          <div class="col-md-3">{{ select_field("初回流入元", "first_inflow_source", inflow_sources, customer.first_inflow_source if customer else "") }}</div>
+          <div class="col-md-3">{{ select_field("初回反響種別", "first_response_type", response_types, customer.first_response_type if customer else "") }}</div>
+          <div class="col-md-3">{{ field("紹介業者名", "referral_agency", customer.referral_agency if customer else "", placeholder="〇〇不動産") }}</div>
+          <div class="col-md-6">{{ field("お問い合わせ物件名", "inquiry_property_name", customer.inquiry_property_name if customer else "", placeholder="〇〇マンション") }}</div>
+          <div class="col-md-3">{{ field("お問い合わせ物件価格（万円）", "inquiry_property_price", customer.inquiry_property_price if customer else "", type="number", placeholder="3500") }}</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ③ ライフサイクル・営業管理 -->
+  <div class="accordion-item border-0 mb-3 shadow-sm rounded">
+    <h2 class="accordion-header">
+      <button class="accordion-button collapsed rounded fw-semibold" type="button" data-bs-toggle="collapse" data-bs-target="#sec3">
+        <i class="bi bi-bar-chart-fill me-2 text-warning"></i> ライフサイクル・営業管理
+      </button>
+    </h2>
+    <div id="sec3" class="accordion-collapse collapse">
+      <div class="accordion-body">
+        <div class="row g-3">
+          <div class="col-md-3">
+            <div class="mb-3">
+              <label class="form-label fw-semibold" style="font-size:0.82rem;">顧客ランク</label>
+              <div class="d-flex flex-wrap gap-2 mt-1">
+                {% for rank in ranks %}
+                <div class="form-check form-check-inline">
+                  <input class="form-check-input" type="radio" name="rank_id" id="rank_{{ rank.id }}" value="{{ rank.id }}"
+                         {% if customer and customer.rank_id == rank.id %}checked{% endif %}>
+                  <label class="form-check-label" for="rank_{{ rank.id }}">
+                    <span class="badge bg-{{ rank.color }}">{{ rank.label }}</span>
+                  </label>
+                </div>
+                {% endfor %}
+                <div class="form-check form-check-inline">
+                  <input class="form-check-input" type="radio" name="rank_id" id="rank_none" value=""
+                         {% if not customer or not customer.rank_id %}checked{% endif %}>
+                  <label class="form-check-label text-muted" for="rank_none" style="font-size:0.8rem;">未設定</label>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="col-md-3">{{ select_field("ライフサイクルステージ", "lifecycle_stage", lifecycle_stages, customer.lifecycle_stage if customer else "") }}</div>
+          <div class="col-md-3">
+            <div class="mb-3">
+              <label class="form-label fw-semibold" style="font-size:0.82rem;">ステータス</label>
+              <select name="status" class="form-select form-select-sm">
+                {% for val, lbl in status_labels.items() %}
+                <option value="{{ val }}" {% if customer and customer.status == val %}selected{% endif %}>{{ lbl }}</option>
+                {% endfor %}
+              </select>
+            </div>
+          </div>
+          <div class="col-md-3">{{ field("担当者", "assigned_to", customer.assigned_to if customer else "", placeholder="担当者名") }}</div>
+          <div class="col-md-3">{{ field("次回コンタクト日", "next_contact_date", customer.next_contact_date if customer else "", type="date") }}</div>
+          <div class="col-md-3">{{ field("最近メール返信日", "last_email_reply_date", customer.last_email_reply_date if customer else "", type="date") }}</div>
+          <div class="col-md-3">{{ field("賃貸契約更新時期", "rental_renewal_date", customer.rental_renewal_date if customer else "", type="date") }}</div>
+          <div class="col-md-3">{{ field("売却活動状況", "sale_activity_status", customer.sale_activity_status if customer else "", placeholder="例: 売却検討中") }}</div>
+          <div class="col-md-3">{{ field("成約金額（万円）", "contract_amount", customer.contract_amount if customer else "", type="number", placeholder="3500") }}</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ④ 購入希望条件 -->
+  <div class="accordion-item border-0 mb-3 shadow-sm rounded">
+    <h2 class="accordion-header">
+      <button class="accordion-button collapsed rounded fw-semibold" type="button" data-bs-toggle="collapse" data-bs-target="#sec4">
+        <i class="bi bi-house-fill me-2 text-danger"></i> 購入希望条件
+      </button>
+    </h2>
+    <div id="sec4" class="accordion-collapse collapse">
+      <div class="accordion-body">
+        <div class="row g-3">
+          <div class="col-md-3">{{ select_field("購入目的", "purchase_purpose", purchase_purposes, customer.purchase_purpose if customer else "") }}</div>
+          <div class="col-md-3">{{ select_field("購入予定時期", "planned_purchase_period", planned_periods, customer.planned_purchase_period if customer else "") }}</div>
+          <div class="col-md-3">{{ select_field("希望物件種別", "desired_property_type", property_types, customer.desired_property_type if customer else "") }}</div>
+          <div class="col-md-3">{{ select_field("希望間取り", "desired_floor_plan", floor_plans, customer.desired_floor_plan if customer else "") }}</div>
+          <div class="col-md-4">{{ field("購入希望エリア", "desired_area", customer.desired_area if customer else "", placeholder="〇〇市・〇〇区など") }}</div>
+          <div class="col-md-8">
+            <div class="mb-3">
+              <label class="form-label fw-semibold" style="font-size:0.82rem;">エリアメモ</label>
+              <textarea name="desired_area_memo" rows="1" class="form-control form-control-sm" placeholder="エリアに関する補足...">{{ customer.desired_area_memo if customer else '' }}</textarea>
+            </div>
+          </div>
+          <div class="col-md-4">{{ field("希望路線", "desired_rail_line", customer.desired_rail_line if customer else "", placeholder="〇〇線・〇〇線") }}</div>
+          <div class="col-md-3">{{ field("最寄り駅距離（分以内）", "max_station_distance", customer.max_station_distance if customer else "", type="number", placeholder="10") }}</div>
+          <div class="col-md-5">
+            <div class="mb-3">
+              <label class="form-label fw-semibold" style="font-size:0.82rem;">路線メモ</label>
+              <textarea name="desired_rail_line_memo" rows="1" class="form-control form-control-sm" placeholder="路線に関する補足...">{{ customer.desired_rail_line_memo if customer else '' }}</textarea>
+            </div>
+          </div>
+          <div class="col-md-3">{{ field("予算最大（万円）", "budget_max", customer.budget_max if customer else "", type="number", placeholder="4000") }}</div>
+          <div class="col-md-3">{{ field("希望土地面積最大（㎡）", "desired_land_area_max", customer.desired_land_area_max if customer else "", type="number", placeholder="150") }}</div>
+          <div class="col-md-3">{{ field("希望延床面積最大（㎡）", "desired_floor_area_max", customer.desired_floor_area_max if customer else "", type="number", placeholder="120") }}</div>
+          <div class="col-md-4">{{ field("購入動機", "purchase_motivation", customer.purchase_motivation if customer else "", placeholder="例: 子供の進学前に") }}</div>
+          <div class="col-12">
+            <div class="mb-3">
+              <label class="form-label fw-semibold" style="font-size:0.82rem;">購入条件メモ</label>
+              <textarea name="purchase_conditions_memo" rows="2" class="form-control form-control-sm"
+                        placeholder="その他の購入条件・要望...">{{ customer.purchase_conditions_memo if customer else '' }}</textarea>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ⑤ 家族・世帯情報 -->
+  <div class="accordion-item border-0 mb-3 shadow-sm rounded">
+    <h2 class="accordion-header">
+      <button class="accordion-button collapsed rounded fw-semibold" type="button" data-bs-toggle="collapse" data-bs-target="#sec5">
+        <i class="bi bi-people-fill me-2 text-info"></i> 家族・世帯情報
+      </button>
+    </h2>
+    <div id="sec5" class="accordion-collapse collapse">
+      <div class="accordion-body">
+        <div class="row g-3">
+          <div class="col-md-2">{{ field("大人の人数", "num_adults", customer.num_adults if customer else "", type="number", placeholder="2") }}</div>
+          <div class="col-md-2">{{ field("子供の人数", "num_children", customer.num_children if customer else "", type="number", placeholder="1") }}</div>
+          <div class="col-md-2">{{ field("子供年齢①", "child_age_1", customer.child_age_1 if customer else "", type="number", placeholder="5") }}</div>
+          <div class="col-md-2">{{ field("子供年齢②", "child_age_2", customer.child_age_2 if customer else "", type="number", placeholder="8") }}</div>
+          <div class="col-md-2">{{ field("子供年齢③", "child_age_3", customer.child_age_3 if customer else "", type="number", placeholder="12") }}</div>
+          <div class="col-md-2">{{ field("車所有台数", "num_cars", customer.num_cars if customer else "", type="number", placeholder="1") }}</div>
+        </div>
+        <hr class="my-2">
+        <p class="fw-semibold mb-2" style="font-size:0.82rem;">世帯主</p>
+        <div class="row g-3">
+          <div class="col-md-4">{{ field("会社名（世帯主）", "household_company", customer.household_company if customer else "", placeholder="株式会社〇〇") }}</div>
+          <div class="col-md-4">{{ field("業種（世帯主）", "household_industry", customer.household_industry if customer else "", placeholder="製造業") }}</div>
+          <div class="col-md-4">{{ field("年収（世帯主・万円）", "household_income", customer.household_income if customer else "", type="number", placeholder="600") }}</div>
+        </div>
+        <p class="fw-semibold mb-2 mt-2" style="font-size:0.82rem;">配偶者</p>
+        <div class="row g-3">
+          <div class="col-md-4">{{ field("会社名（配偶者）", "spouse_company", customer.spouse_company if customer else "", placeholder="株式会社〇〇") }}</div>
+          <div class="col-md-4">{{ field("業種（配偶者）", "spouse_industry", customer.spouse_industry if customer else "", placeholder="サービス業") }}</div>
+          <div class="col-md-4">{{ field("年収（配偶者・万円）", "spouse_income", customer.spouse_income if customer else "", type="number", placeholder="300") }}</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ⑥ メモ -->
+  <div class="accordion-item border-0 mb-3 shadow-sm rounded">
+    <h2 class="accordion-header">
+      <button class="accordion-button collapsed rounded fw-semibold" type="button" data-bs-toggle="collapse" data-bs-target="#sec6">
+        <i class="bi bi-sticky-fill me-2 text-secondary"></i> メモ・備考
+      </button>
+    </h2>
+    <div id="sec6" class="accordion-collapse collapse">
+      <div class="accordion-body">
+        <textarea name="memo" rows="5" class="form-control"
+                  placeholder="自由メモ...">{{ customer.memo if customer else '' }}</textarea>
+      </div>
+    </div>
+  </div>
+
+</div><!-- /accordion -->
+
+<div class="d-flex gap-2 mt-2">
+  <button type="submit" class="btn btn-primary px-4">
+    <i class="bi bi-check-lg me-1"></i> {% if customer %}更新する{% else %}登録する{% endif %}
+  </button>
+  <a href="{% if customer %}/customers/{{ customer.id }}{% else %}/customers/{% endif %}"
+     class="btn btn-outline-secondary px-4">キャンセル</a>
+</div>
+</form>
+{% endblock %}

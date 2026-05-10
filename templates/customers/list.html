@@ -1,0 +1,135 @@
+{% extends "base.html" %}
+{% block title %}顧客一覧 - 顧客管理CRM{% endblock %}
+{% block page_title %}顧客一覧{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-3">
+  <h5 class="fw-bold mb-0">顧客一覧</h5>
+  <a href="/customers/new" class="btn btn-primary btn-sm">
+    <i class="bi bi-person-plus-fill me-1"></i> 新規追加
+  </a>
+</div>
+
+<!-- 検索・フィルター -->
+<div class="card mb-3">
+  <div class="card-body py-3">
+    <form method="get" action="/customers/" class="row g-2 align-items-end">
+      <div class="col-md-4">
+        <label class="form-label mb-1" style="font-size:0.8rem;">キーワード検索</label>
+        <input type="text" name="q" value="{{ q }}" class="form-control form-control-sm"
+               placeholder="氏名・会社・メール・電話">
+      </div>
+      <div class="col-md-3">
+        <label class="form-label mb-1" style="font-size:0.8rem;">ランク</label>
+        <select name="rank_id" class="form-select form-select-sm">
+          <option value="">すべて</option>
+          {% for rank in ranks %}
+          <option value="{{ rank.id }}" {% if selected_rank_id == rank.id %}selected{% endif %}>
+            {{ rank.label }} - {{ rank.name }}
+          </option>
+          {% endfor %}
+        </select>
+      </div>
+      <div class="col-md-2">
+        <label class="form-label mb-1" style="font-size:0.8rem;">ステータス</label>
+        <select name="status" class="form-select form-select-sm">
+          <option value="">すべて</option>
+          {% for val, label in status_labels.items() %}
+          <option value="{{ val }}" {% if selected_status == val %}selected{% endif %}>{{ label }}</option>
+          {% endfor %}
+        </select>
+      </div>
+      <div class="col-md-auto">
+        <button type="submit" class="btn btn-primary btn-sm">
+          <i class="bi bi-search"></i> 検索
+        </button>
+        <a href="/customers/" class="btn btn-outline-secondary btn-sm ms-1">リセット</a>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- ランクタブ -->
+<div class="mb-3">
+  <div class="d-flex gap-2 flex-wrap">
+    <a href="/customers/" class="btn btn-sm {% if not selected_rank_id %}btn-dark{% else %}btn-outline-secondary{% endif %}">
+      すべて
+    </a>
+    {% for rank in ranks %}
+    <a href="/customers/?rank_id={{ rank.id }}" class="btn btn-sm {% if selected_rank_id == rank.id %}btn-{{ rank.color }}{% else %}btn-outline-{{ rank.color }}{% endif %}">
+      {{ rank.label }} {{ rank.name }}
+    </a>
+    {% endfor %}
+  </div>
+</div>
+
+<div class="card">
+  <div class="card-body p-0">
+    {% if customers %}
+    <table class="table table-hover align-middle mb-0">
+      <thead class="table-light">
+        <tr>
+          <th class="px-3">氏名</th>
+          <th>会社</th>
+          <th>ランク</th>
+          <th>ステータス</th>
+          <th>次回コンタクト日</th>
+          <th>担当者</th>
+          <th>操作</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for c in customers %}
+        {% set is_overdue = c.next_contact_date and c.next_contact_date < today %}
+        {% set is_today = c.next_contact_date and c.next_contact_date == today %}
+        <tr class="{% if is_overdue %}overdue-row{% elif is_today %}today-row{% endif %}">
+          <td class="px-3">
+            <a href="/customers/{{ c.id }}" class="fw-semibold text-decoration-none text-dark">
+              {{ c.name }}
+            </a>
+            {% if c.email %}<div class="text-muted" style="font-size:0.75rem;">{{ c.email }}</div>{% endif %}
+          </td>
+          <td class="text-muted" style="font-size:0.85rem;">{{ c.company or '-' }}</td>
+          <td>
+            {% if c.rank %}
+              <span class="badge bg-{{ c.rank.color }}">{{ c.rank.label }} {{ c.rank.name }}</span>
+            {% else %}
+              <span class="text-muted">-</span>
+            {% endif %}
+          </td>
+          <td>
+            {% set s = c.status %}
+            <span class="badge {% if s == 'existing' %}bg-success{% elif s == 'lost' %}bg-secondary{% else %}bg-info text-dark{% endif %}">
+              {{ status_labels.get(s, s) }}
+            </span>
+          </td>
+          <td style="font-size:0.85rem;">
+            {% if c.next_contact_date %}
+              <span class="{% if is_overdue %}text-danger fw-bold{% elif is_today %}text-warning fw-bold{% endif %}">
+                {% if is_overdue %}<i class="bi bi-exclamation-circle-fill me-1"></i>{% endif %}
+                {{ c.next_contact_date }}
+              </span>
+            {% else %}
+              <span class="text-muted">未設定</span>
+            {% endif %}
+          </td>
+          <td style="font-size:0.85rem;">{{ c.assigned_to or '-' }}</td>
+          <td>
+            <a href="/customers/{{ c.id }}" class="btn btn-sm btn-outline-primary py-0">詳細</a>
+            <a href="/customers/{{ c.id }}/edit" class="btn btn-sm btn-outline-secondary py-0 ms-1">編集</a>
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+    {% else %}
+    <div class="p-5 text-center text-muted">
+      <i class="bi bi-person-x fs-1 d-block mb-2"></i>
+      顧客が見つかりません。
+      <a href="/customers/new">新規追加</a>してください。
+    </div>
+    {% endif %}
+  </div>
+</div>
+<div class="text-muted mt-2" style="font-size:0.8rem;">{{ customers|length }} 件表示</div>
+{% endblock %}

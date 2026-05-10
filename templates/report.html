@@ -1,0 +1,113 @@
+{% extends "base.html" %}
+{% block title %}進捗レポート - 顧客管理CRM{% endblock %}
+{% block page_title %}進捗レポート{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+  <h5 class="fw-bold mb-0">進捗レポート</h5>
+  <span class="text-muted" style="font-size:0.85rem;">集計期間: {{ month_start }} 〜 {{ today }}</span>
+</div>
+
+<!-- 今月のアプローチ件数 -->
+<div class="row g-3 mb-4">
+  <div class="col-6 col-md-3">
+    <div class="card text-center h-100">
+      <div class="card-body">
+        <div class="text-muted mb-1" style="font-size:0.78rem;">今月のコンタクト件数</div>
+        <div class="fw-bold" style="font-size:2.5rem; color:#1a2340;">{{ month_contacts }}</div>
+        <div class="text-muted" style="font-size:0.72rem;">件</div>
+      </div>
+    </div>
+  </div>
+  <div class="col-6 col-md-3">
+    <div class="card text-center h-100">
+      <div class="card-body">
+        <div class="text-muted mb-1" style="font-size:0.78rem;">アプローチ顧客数（ユニーク）</div>
+        <div class="fw-bold" style="font-size:2.5rem; color:#0d6efd;">{{ unique_contacted }}</div>
+        <div class="text-muted" style="font-size:0.72rem;">人</div>
+      </div>
+    </div>
+  </div>
+  <div class="col-6 col-md-3">
+    <div class="card text-center h-100">
+      <div class="card-body">
+        <div class="text-muted mb-1" style="font-size:0.78rem;">既存顧客（成約済み）</div>
+        <div class="fw-bold" style="font-size:2.5rem; color:#198754;">{{ existing_customers }}</div>
+        <div class="text-muted" style="font-size:0.72rem;">件</div>
+      </div>
+    </div>
+  </div>
+  <div class="col-6 col-md-3">
+    <div class="card text-center h-100">
+      <div class="card-body">
+        <div class="text-muted mb-1" style="font-size:0.78rem;">失注件数</div>
+        <div class="fw-bold" style="font-size:2.5rem; color:#6c757d;">{{ lost_customers }}</div>
+        <div class="text-muted" style="font-size:0.72rem;">件</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="row g-4">
+  <!-- 種別コンタクト内訳 -->
+  <div class="col-md-5">
+    <div class="card">
+      <div class="card-header fw-semibold py-2 px-3" style="font-size:0.88rem;">
+        <i class="bi bi-telephone-fill me-1"></i> 今月のコンタクト内訳
+      </div>
+      <div class="card-body">
+        {% if contact_by_type %}
+          {% for type_key, count in contact_by_type.items() %}
+          {% set pct = (count / month_contacts * 100) | round(1) if month_contacts > 0 else 0 %}
+          {% set colors = {'phone':'success','email':'primary','meeting':'warning','visit':'danger','other':'secondary'} %}
+          <div class="mb-3">
+            <div class="d-flex justify-content-between mb-1">
+              <span style="font-size:0.85rem;">{{ type_labels.get(type_key, type_key) }}</span>
+              <span class="text-muted" style="font-size:0.82rem;">{{ count }}件 ({{ pct }}%)</span>
+            </div>
+            <div class="progress" style="height:8px;">
+              <div class="progress-bar bg-{{ colors.get(type_key,'secondary') }}" style="width:{{ pct }}%"></div>
+            </div>
+          </div>
+          {% endfor %}
+        {% else %}
+          <div class="text-center text-muted py-3" style="font-size:0.88rem;">今月のコンタクト履歴がありません</div>
+        {% endif %}
+      </div>
+    </div>
+  </div>
+
+  <!-- ランク別件数 -->
+  <div class="col-md-7">
+    <div class="card">
+      <div class="card-header fw-semibold py-2 px-3" style="font-size:0.88rem;">
+        <i class="bi bi-bar-chart-fill me-1"></i> ランク別顧客数（全件）
+      </div>
+      <div class="card-body">
+        <div class="row g-3">
+          {% for rank in ranks %}
+          {% set count = rank_counts.get(rank.id, 0) %}
+          {% set pct = (count / total_customers * 100) | round(1) if total_customers > 0 else 0 %}
+          <div class="col-6">
+            <div class="card border bg-light h-100">
+              <div class="card-body py-2 px-3">
+                <div class="d-flex align-items-center gap-2 mb-1">
+                  <span class="badge bg-{{ rank.color }}">{{ rank.label }}</span>
+                  <span class="fw-semibold" style="font-size:0.85rem;">{{ rank.name }}</span>
+                </div>
+                <div class="fw-bold" style="font-size:1.8rem;">{{ count }}<span class="text-muted fw-normal" style="font-size:0.8rem;">件</span></div>
+                <div class="progress mt-1" style="height:5px;">
+                  <div class="progress-bar bg-{{ rank.color }}" style="width:{{ pct }}%"></div>
+                </div>
+                <div class="text-muted mt-1" style="font-size:0.72rem;">{{ rank.contact_frequency or '―' }}</div>
+              </div>
+            </div>
+          </div>
+          {% endfor %}
+        </div>
+        <div class="text-muted text-end mt-2" style="font-size:0.8rem;">総顧客数: {{ total_customers }}件</div>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

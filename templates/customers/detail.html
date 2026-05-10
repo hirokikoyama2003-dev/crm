@@ -1,0 +1,289 @@
+{% extends "base.html" %}
+{% block title %}{{ customer.name }} - 顧客管理CRM{% endblock %}
+{% block page_title %}顧客詳細{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-3">
+  <div class="d-flex align-items-center gap-2">
+    <a href="/customers/" class="btn btn-outline-secondary btn-sm"><i class="bi bi-arrow-left"></i></a>
+    <h5 class="fw-bold mb-0">{{ customer.name }}</h5>
+    {% if customer.rank %}
+      <span class="badge bg-{{ customer.rank.color }} fs-6">{{ customer.rank.label }} {{ customer.rank.name }}</span>
+    {% endif %}
+    {% if customer.lifecycle_stage %}
+      <span class="badge bg-light text-dark border" style="font-size:0.78rem;">{{ customer.lifecycle_stage }}</span>
+    {% endif %}
+  </div>
+  <div class="d-flex gap-2">
+    <a href="/customers/{{ customer.id }}/print" target="_blank" class="btn btn-outline-secondary btn-sm">
+      <i class="bi bi-printer-fill me-1"></i> 印刷
+    </a>
+    <a href="/customers/{{ customer.id }}/edit" class="btn btn-outline-primary btn-sm">
+      <i class="bi bi-pencil-fill me-1"></i> 編集
+    </a>
+    <form action="/customers/{{ customer.id }}/delete" method="post"
+          onsubmit="return confirm('{{ customer.name }} を削除しますか？この操作は取り消せません。')">
+      <button class="btn btn-outline-danger btn-sm"><i class="bi bi-trash-fill me-1"></i> 削除</button>
+    </form>
+  </div>
+</div>
+
+<div class="row g-3">
+  <!-- ── 左カラム ─────────────────────────────── -->
+  <div class="col-lg-4">
+
+    <!-- 次回コンタクト日 -->
+    {% set nd = customer.next_contact_date %}
+    {% set is_overdue = nd and nd < today %}
+    {% set is_today   = nd and nd == today %}
+    <div class="card mb-3 border-2 {% if is_overdue %}border-danger{% elif is_today %}border-warning{% else %}border-primary{% endif %}">
+      <div class="card-body">
+        <div class="d-flex justify-content-between align-items-center mb-2">
+          <span class="fw-semibold" style="font-size:0.9rem;"><i class="bi bi-calendar-check-fill me-1 text-primary"></i> 次回コンタクト日</span>
+          {% if is_overdue %}<span class="badge bg-danger">期限切れ</span>{% elif is_today %}<span class="badge bg-warning text-dark">今日</span>{% endif %}
+        </div>
+        <form action="/customers/{{ customer.id }}/next-contact" method="post" class="d-flex gap-2">
+          <input type="date" name="next_contact_date" class="form-control form-control-sm"
+                 value="{{ customer.next_contact_date or '' }}">
+          <button class="btn btn-primary btn-sm text-nowrap">更新</button>
+        </form>
+        {% if customer.rank and customer.rank.contact_frequency %}
+          <div class="text-muted mt-1" style="font-size:0.73rem;"><i class="bi bi-info-circle me-1"></i>推奨: {{ customer.rank.contact_frequency }}</div>
+        {% endif %}
+      </div>
+    </div>
+
+    <!-- ランク変更 -->
+    <div class="card mb-3">
+      <div class="card-header py-2 px-3 fw-semibold" style="font-size:0.85rem;"><i class="bi bi-bar-chart-fill me-1"></i> ランク変更</div>
+      <div class="card-body py-2">
+        <form action="/customers/{{ customer.id }}/edit" method="post" id="rankForm">
+          {% for fname in ['name','email','phone','best_contact_time','postal_code','prefecture','city','address','current_residence_type','first_contact_date','first_inflow_source','first_response_type','referral_agency','inquiry_property_name','inquiry_property_price','lifecycle_stage','status','assigned_to','last_email_reply_date','rental_renewal_date','sale_activity_status','next_contact_date','purchase_purpose','purchase_motivation','planned_purchase_period','desired_property_type','desired_area','desired_area_memo','desired_rail_line','desired_rail_line_memo','max_station_distance','budget_max','desired_land_area_max','desired_floor_area_max','desired_floor_plan','purchase_conditions_memo','num_adults','num_children','child_age_1','child_age_2','child_age_3','num_cars','household_company','household_industry','household_income','spouse_company','spouse_industry','spouse_income','contract_amount','memo','birth_date','sale_activity_status'] %}
+          <input type="hidden" name="{{ fname }}" value="{{ customer[fname] if customer[fname] is defined else (customer | attr(fname)) or '' }}">
+          {% endfor %}
+          <div class="d-flex flex-wrap gap-2">
+            {% for rank in ranks %}
+            <button type="submit" name="rank_id" value="{{ rank.id }}"
+                    class="btn btn-sm {% if customer.rank_id == rank.id %}btn-{{ rank.color }}{% else %}btn-outline-{{ rank.color }}{% endif %}">
+              {{ rank.label }} {{ rank.name }}
+            </button>
+            {% endfor %}
+            <button type="submit" name="rank_id" value="" class="btn btn-sm {% if not customer.rank_id %}btn-secondary{% else %}btn-outline-secondary{% endif %}">未設定</button>
+          </div>
+        </form>
+      </div>
+    </div>
+
+    <!-- 基本情報 -->
+    <div class="card mb-3">
+      <div class="card-header py-2 px-3 fw-semibold" style="font-size:0.85rem;"><i class="bi bi-person-fill me-1"></i> 基本情報</div>
+      <div class="card-body p-0">
+        <table class="table table-sm mb-0" style="font-size:0.82rem;">
+          <tr><th class="ps-3 text-muted" style="width:8rem;">氏名</th><td>{{ customer.name }}</td></tr>
+          <tr><th class="ps-3 text-muted">メール</th><td>{% if customer.email %}<a href="mailto:{{ customer.email }}">{{ customer.email }}</a>{% else %}-{% endif %}</td></tr>
+          <tr><th class="ps-3 text-muted">電話</th><td>{% if customer.phone %}<a href="tel:{{ customer.phone }}">{{ customer.phone }}</a>{% else %}-{% endif %}</td></tr>
+          <tr><th class="ps-3 text-muted">生年月日</th><td>{{ customer.birth_date or '-' }}</td></tr>
+          <tr><th class="ps-3 text-muted">連絡可能時間</th><td>{{ customer.best_contact_time or '-' }}</td></tr>
+          <tr><th class="ps-3 text-muted">住所</th><td>{% if customer.prefecture %}〒{{ customer.postal_code }} {{ customer.prefecture }}{{ customer.city }}{{ customer.address }}{% else %}-{% endif %}</td></tr>
+          <tr><th class="ps-3 text-muted">居住種別</th><td>{{ customer.current_residence_type or '-' }}</td></tr>
+        </table>
+      </div>
+    </div>
+
+    <!-- 流入情報 -->
+    <div class="card mb-3">
+      <div class="card-header py-2 px-3 fw-semibold" style="font-size:0.85rem;"><i class="bi bi-funnel-fill me-1 text-success"></i> 流入・反響情報</div>
+      <div class="card-body p-0">
+        <table class="table table-sm mb-0" style="font-size:0.82rem;">
+          <tr><th class="ps-3 text-muted" style="width:8rem;">初回コンタクト</th><td>{{ customer.first_contact_date or '-' }}</td></tr>
+          <tr><th class="ps-3 text-muted">流入元</th><td>{{ customer.first_inflow_source or '-' }}</td></tr>
+          <tr><th class="ps-3 text-muted">反響種別</th><td>{{ customer.first_response_type or '-' }}</td></tr>
+          <tr><th class="ps-3 text-muted">紹介業者</th><td>{{ customer.referral_agency or '-' }}</td></tr>
+          <tr><th class="ps-3 text-muted">問い合わせ物件</th><td>{{ customer.inquiry_property_name or '-' }}{% if customer.inquiry_property_price %} ({{ "{:,}".format(customer.inquiry_property_price) }}万円){% endif %}</td></tr>
+        </table>
+      </div>
+    </div>
+
+    <!-- 営業状況 -->
+    <div class="card mb-3">
+      <div class="card-header py-2 px-3 fw-semibold" style="font-size:0.85rem;"><i class="bi bi-briefcase-fill me-1 text-warning"></i> 営業状況</div>
+      <div class="card-body p-0">
+        <table class="table table-sm mb-0" style="font-size:0.82rem;">
+          <tr><th class="ps-3 text-muted" style="width:8rem;">担当者</th><td>{{ customer.assigned_to or '-' }}</td></tr>
+          <tr><th class="ps-3 text-muted">ステータス</th><td>
+            {% set s = customer.status %}
+            <span class="badge {% if s == 'existing' %}bg-success{% elif s == 'lost' %}bg-secondary{% else %}bg-info text-dark{% endif %}">{{ status_labels.get(s, s) }}</span>
+          </td></tr>
+          <tr><th class="ps-3 text-muted">メール返信日</th><td>{{ customer.last_email_reply_date or '-' }}</td></tr>
+          <tr><th class="ps-3 text-muted">賃貸更新時期</th><td>{{ customer.rental_renewal_date or '-' }}</td></tr>
+          <tr><th class="ps-3 text-muted">売却状況</th><td>{{ customer.sale_activity_status or '-' }}</td></tr>
+          <tr><th class="ps-3 text-muted">成約金額</th><td>{% if customer.contract_amount %}{{ "{:,}".format(customer.contract_amount) }}万円{% else %}-{% endif %}</td></tr>
+        </table>
+      </div>
+    </div>
+
+    <!-- メールテンプレート -->
+    {% if email_template %}
+    <div class="card mb-3">
+      <div class="card-header py-2 px-3 fw-semibold" style="font-size:0.85rem;"><i class="bi bi-envelope-paper-fill me-1"></i> メールテンプレート</div>
+      <div class="card-body">
+        <div class="mb-1" style="font-size:0.78rem;"><span class="text-muted">件名:</span> {{ email_template.subject }}</div>
+        <pre id="tmplBody" class="bg-light rounded p-2 mb-2" style="font-size:0.78rem;white-space:pre-wrap;font-family:inherit;">{{ email_template.body }}</pre>
+        <button class="btn btn-outline-secondary btn-sm" onclick="copyTemplate('{{ email_template.subject }}', document.getElementById('tmplBody').innerText)">
+          <i class="bi bi-clipboard me-1"></i> コピー
+        </button>
+      </div>
+    </div>
+    {% endif %}
+  </div>
+
+  <!-- ── 中央カラム: 購入条件 + 家族 ─────────── -->
+  <div class="col-lg-4">
+    <div class="card mb-3">
+      <div class="card-header py-2 px-3 fw-semibold" style="font-size:0.85rem;"><i class="bi bi-house-fill me-1 text-danger"></i> 購入希望条件</div>
+      <div class="card-body p-0">
+        <table class="table table-sm mb-0" style="font-size:0.82rem;">
+          <tr><th class="ps-3 text-muted" style="width:8rem;">購入目的</th><td>{{ customer.purchase_purpose or '-' }}</td></tr>
+          <tr><th class="ps-3 text-muted">購入動機</th><td>{{ customer.purchase_motivation or '-' }}</td></tr>
+          <tr><th class="ps-3 text-muted">購入予定時期</th><td>{{ customer.planned_purchase_period or '-' }}</td></tr>
+          <tr><th class="ps-3 text-muted">希望物件種別</th><td>{{ customer.desired_property_type or '-' }}</td></tr>
+          <tr><th class="ps-3 text-muted">希望間取り</th><td>{{ customer.desired_floor_plan or '-' }}</td></tr>
+          <tr><th class="ps-3 text-muted">予算（最大）</th><td>{% if customer.budget_max %}{{ "{:,}".format(customer.budget_max) }}万円{% else %}-{% endif %}</td></tr>
+          <tr><th class="ps-3 text-muted">希望エリア</th><td>{{ customer.desired_area or '-' }}</td></tr>
+          {% if customer.desired_area_memo %}
+          <tr><th class="ps-3 text-muted">エリアメモ</th><td style="white-space:pre-wrap;">{{ customer.desired_area_memo }}</td></tr>
+          {% endif %}
+          <tr><th class="ps-3 text-muted">希望路線</th><td>{{ customer.desired_rail_line or '-' }}</td></tr>
+          <tr><th class="ps-3 text-muted">駅距離（分）</th><td>{% if customer.max_station_distance %}{{ customer.max_station_distance }}分以内{% else %}-{% endif %}</td></tr>
+          <tr><th class="ps-3 text-muted">土地面積（㎡）</th><td>{% if customer.desired_land_area_max %}{{ customer.desired_land_area_max }}㎡以内{% else %}-{% endif %}</td></tr>
+          <tr><th class="ps-3 text-muted">延床面積（㎡）</th><td>{% if customer.desired_floor_area_max %}{{ customer.desired_floor_area_max }}㎡以内{% else %}-{% endif %}</td></tr>
+          {% if customer.purchase_conditions_memo %}
+          <tr><th class="ps-3 text-muted">条件メモ</th><td style="white-space:pre-wrap;">{{ customer.purchase_conditions_memo }}</td></tr>
+          {% endif %}
+        </table>
+      </div>
+    </div>
+
+    <div class="card mb-3">
+      <div class="card-header py-2 px-3 fw-semibold" style="font-size:0.85rem;"><i class="bi bi-people-fill me-1 text-info"></i> 家族・世帯情報</div>
+      <div class="card-body p-0">
+        <table class="table table-sm mb-0" style="font-size:0.82rem;">
+          <tr><th class="ps-3 text-muted" style="width:8rem;">大人/子供</th>
+            <td>{{ customer.num_adults or '-' }}人 / {{ customer.num_children or '-' }}人</td></tr>
+          {% if customer.num_children and customer.num_children > 0 %}
+          <tr><th class="ps-3 text-muted">子供の年齢</th>
+            <td>
+              {% if customer.child_age_1 %}{{ customer.child_age_1 }}歳{% endif %}
+              {% if customer.child_age_2 %} / {{ customer.child_age_2 }}歳{% endif %}
+              {% if customer.child_age_3 %} / {{ customer.child_age_3 }}歳{% endif %}
+            </td>
+          </tr>
+          {% endif %}
+          <tr><th class="ps-3 text-muted">車所有台数</th><td>{% if customer.num_cars %}{{ customer.num_cars }}台{% else %}-{% endif %}</td></tr>
+          <tr><th class="ps-3 text-muted">会社（世帯主）</th><td>{{ customer.household_company or '-' }} {% if customer.household_industry %}/ {{ customer.household_industry }}{% endif %}</td></tr>
+          <tr><th class="ps-3 text-muted">年収（世帯主）</th><td>{% if customer.household_income %}{{ "{:,}".format(customer.household_income) }}万円{% else %}-{% endif %}</td></tr>
+          <tr><th class="ps-3 text-muted">会社（配偶者）</th><td>{{ customer.spouse_company or '-' }} {% if customer.spouse_industry %}/ {{ customer.spouse_industry }}{% endif %}</td></tr>
+          <tr><th class="ps-3 text-muted">年収（配偶者）</th><td>{% if customer.spouse_income %}{{ "{:,}".format(customer.spouse_income) }}万円{% else %}-{% endif %}</td></tr>
+        </table>
+      </div>
+    </div>
+
+    {% if customer.memo %}
+    <div class="card mb-3">
+      <div class="card-header py-2 px-3 fw-semibold" style="font-size:0.85rem;"><i class="bi bi-sticky-fill me-1"></i> メモ・備考</div>
+      <div class="card-body"><p class="mb-0" style="white-space:pre-wrap;font-size:0.85rem;">{{ customer.memo }}</p></div>
+    </div>
+    {% endif %}
+  </div>
+
+  <!-- ── 右カラム: 履歴 ────────────────────────── -->
+  <div class="col-lg-4">
+    <!-- 履歴追加 -->
+    <div class="card mb-3">
+      <div class="card-header py-2 px-3 fw-semibold" style="font-size:0.85rem;"><i class="bi bi-plus-circle-fill me-1 text-success"></i> コンタクト履歴を追加</div>
+      <div class="card-body">
+        <form action="/customers/{{ customer.id }}/history/add" method="post">
+          <div class="row g-2 mb-2">
+            <div class="col-6">
+              <select name="contact_type" class="form-select form-select-sm">
+                {% for val, lbl in contact_type_labels.items() %}
+                <option value="{{ val }}">{{ lbl }}</option>
+                {% endfor %}
+              </select>
+            </div>
+            <div class="col-6">
+              <input type="datetime-local" name="contacted_at" class="form-control form-control-sm"
+                     value="{{ today.strftime('%Y-%m-%dT%H:%M') if today else '' }}">
+            </div>
+          </div>
+          <div class="mb-2">
+            <input type="text" name="created_by" class="form-control form-control-sm"
+                   placeholder="担当者名" value="{{ customer.assigned_to }}">
+          </div>
+          <div class="mb-2">
+            <textarea name="content" rows="3" class="form-control form-control-sm"
+                      placeholder="コンタクト内容..."></textarea>
+          </div>
+          <button type="submit" class="btn btn-success btn-sm w-100"><i class="bi bi-plus me-1"></i> 追加</button>
+        </form>
+      </div>
+    </div>
+
+    <!-- 履歴タイムライン -->
+    <div class="card">
+      <div class="card-header py-2 px-3 fw-semibold" style="font-size:0.85rem;">
+        <i class="bi bi-clock-history me-1"></i> コンタクト履歴
+        <span class="badge bg-secondary ms-1">{{ customer.contact_history|length }}</span>
+      </div>
+      <div class="card-body p-0">
+        {% if customer.contact_history %}
+        <div class="px-3 pt-3">
+          {% set type_colors = {'tel':'success','tel_in':'info','sms':'warning','email':'primary','meeting':'dark','visit':'danger','other':'secondary'} %}
+          {% for h in customer.contact_history %}
+          <div class="d-flex gap-2 mb-3">
+            <div class="text-center" style="min-width:1.5rem;">
+              <span>{{ contact_type_labels.get(h.contact_type, '📝').split(' ')[0] }}</span>
+              {% if not loop.last %}<div class="border-start border-2 mx-auto mt-1" style="width:2px;height:1.2rem;"></div>{% endif %}
+            </div>
+            <div class="flex-grow-1 bg-light rounded p-2" style="font-size:0.82rem;">
+              <div class="d-flex justify-content-between align-items-start">
+                <span class="badge bg-{{ type_colors.get(h.contact_type,'secondary') }}">
+                  {{ contact_type_labels.get(h.contact_type, h.contact_type).split(' ')[-1] }}
+                </span>
+                <div class="d-flex align-items-center gap-2">
+                  <span class="text-muted" style="font-size:0.72rem;">{{ h.contacted_at.strftime('%Y/%m/%d %H:%M') }}{% if h.created_by %} ・ {{ h.created_by }}{% endif %}</span>
+                  <form action="/customers/{{ customer.id }}/history/{{ h.id }}/delete" method="post" onsubmit="return confirm('削除しますか？')">
+                    <button class="btn btn-link btn-sm text-danger p-0" style="font-size:0.72rem;"><i class="bi bi-x-circle"></i></button>
+                  </form>
+                </div>
+              </div>
+              {% if h.content %}<div class="mt-1" style="white-space:pre-wrap;">{{ h.content }}</div>{% endif %}
+            </div>
+          </div>
+          {% endfor %}
+        </div>
+        {% else %}
+        <div class="p-4 text-center text-muted" style="font-size:0.85rem;"><i class="bi bi-chat-square-dots fs-2 d-block mb-2"></i>まだ履歴がありません。</div>
+        {% endif %}
+      </div>
+    </div>
+  </div>
+</div>
+
+<div id="copyToast" class="toast align-items-center text-bg-success border-0 position-fixed bottom-0 end-0 m-3" role="alert" style="z-index:9999;">
+  <div class="d-flex">
+    <div class="toast-body"><i class="bi bi-check-circle me-1"></i> クリップボードにコピーしました</div>
+    <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast"></button>
+  </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+function copyTemplate(subject, body) {
+  navigator.clipboard.writeText(`件名: ${subject}\n\n${body}`).then(() => {
+    new bootstrap.Toast(document.getElementById('copyToast')).show();
+  });
+}
+</script>
+{% endblock %}

@@ -1,0 +1,84 @@
+{% extends "base.html" %}
+{% block title %}ライフサイクルステージ設定 - 顧客管理CRM{% endblock %}
+{% block page_title %}ライフサイクルステージ設定{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+  <h5 class="fw-bold mb-0">ライフサイクルステージ</h5>
+</div>
+<p class="text-muted mb-4" style="font-size:0.88rem;">顧客の追客状況を表すステージを管理します。顧客登録・編集画面のドロップダウンに反映されます。</p>
+
+<div class="row g-3">
+  <div class="col-md-5">
+    <!-- 既存ステージ一覧 -->
+    <div class="card mb-3">
+      <div class="card-header fw-semibold py-2 px-3" style="font-size:0.88rem;">
+        <i class="bi bi-list-check me-1"></i> 現在のステージ
+      </div>
+      <div class="list-group list-group-flush">
+        {% for stage in stages %}
+        <div class="list-group-item d-flex align-items-center gap-2 py-2">
+          <span class="badge bg-secondary" style="min-width:1.5rem;">{{ loop.index }}</span>
+          <form action="/settings/lifecycle/{{ stage.id }}/update" method="post" class="d-flex flex-grow-1 gap-2">
+            <input type="text" name="name" value="{{ stage.name }}" class="form-control form-control-sm fw-semibold">
+            <button type="submit" class="btn btn-outline-primary btn-sm text-nowrap">
+              <i class="bi bi-check"></i> 保存
+            </button>
+          </form>
+          <form action="/settings/lifecycle/{{ stage.id }}/delete" method="post"
+                onsubmit="return confirm('「{{ stage.name }}」を削除しますか？')">
+            <button type="submit" class="btn btn-outline-danger btn-sm">
+              <i class="bi bi-trash"></i>
+            </button>
+          </form>
+        </div>
+        {% else %}
+        <div class="list-group-item text-muted text-center py-3" style="font-size:0.88rem;">
+          ステージがありません
+        </div>
+        {% endfor %}
+      </div>
+    </div>
+
+    <!-- 新規追加 -->
+    <div class="card">
+      <div class="card-header fw-semibold py-2 px-3" style="font-size:0.88rem;">
+        <i class="bi bi-plus-circle-fill me-1 text-success"></i> ステージを追加
+      </div>
+      <div class="card-body">
+        <form action="/settings/lifecycle/new" method="post" class="d-flex gap-2">
+          <input type="text" name="name" class="form-control form-control-sm" placeholder="例: 検討中" required>
+          <button type="submit" class="btn btn-success btn-sm text-nowrap">
+            <i class="bi bi-plus me-1"></i> 追加
+          </button>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <div class="col-md-7">
+    <div class="card">
+      <div class="card-header fw-semibold py-2 px-3" style="font-size:0.88rem;">
+        <i class="bi bi-info-circle me-1 text-primary"></i> 各ステージの使い方
+      </div>
+      <div class="card-body">
+        <ul class="list-unstyled mb-0" style="font-size:0.88rem;">
+          {% for stage in stages %}
+          <li class="d-flex align-items-center gap-2 mb-2">
+            <span class="badge bg-secondary">{{ stage.name }}</span>
+            <span class="text-muted">—
+              {% if stage.name == '追客中' %}積極的にコンタクトを取っている顧客
+              {% elif stage.name == '未対応' %}まだ初回アプローチができていない顧客
+              {% elif stage.name == '他決' %}他社・他物件で決定した顧客
+              {% elif stage.name == '中止' %}追客を停止した顧客（本人の希望など）
+              {% else %}—
+              {% endif %}
+            </span>
+          </li>
+          {% endfor %}
+        </ul>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}
