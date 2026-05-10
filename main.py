@@ -8,7 +8,7 @@ sys.path.insert(0, os.getcwd())
 
 import uvicorn
 from fastapi import FastAPI, Request
-from fastapi.responses import RedirectResponse, JSONResponse
+from fastapi.responses import RedirectResponse
 from fastapi.staticfiles import StaticFiles
 from starlette.middleware.sessions import SessionMiddleware
 from database import engine, SessionLocal
@@ -18,16 +18,6 @@ from routers import auth
 
 app = FastAPI(title="顧客管理システム")
 
-# グローバル例外ハンドラー（デバッグ用）
-@app.exception_handler(Exception)
-async def global_exception_handler(request: Request, exc: Exception):
-    tb = traceback.format_exc()
-    return JSONResponse(status_code=500, content={
-        "error": str(exc),
-        "type": type(exc).__name__,
-        "path": str(request.url),
-        "traceback": tb,
-    })
 
 app.mount("/static", StaticFiles(directory="static"), name="static")
 
@@ -46,7 +36,7 @@ app.include_router(settings.router)
 @app.middleware("http")
 async def auth_middleware(request: Request, call_next):
     path = request.url.path
-    if path.startswith("/login") or path.startswith("/static") or path.startswith("/_debug"):
+    if path.startswith("/login") or path.startswith("/static"):
         return await call_next(request)
     if not request.session.get("user"):
         return RedirectResponse("/login", status_code=302)
@@ -59,25 +49,6 @@ async def auth_middleware(request: Request, call_next):
 SECRET_KEY = os.environ.get("SESSION_SECRET", "local-dev-secret-change-in-production")
 app.add_middleware(SessionMiddleware, secret_key=SECRET_KEY)
 
-
-# デバッグ用エンドポイント（問題解決後に削除）
-@app.get("/_debug")
-async def debug_info():
-    import glob
-    db_url = os.environ.get("DATABASE_URL", "NOT SET")
-    # ファイル一覧確認
-    all_files = glob.glob("**/*", recursive=True)
-    template_files = [f for f in all_files if "template" in f.lower()]
-    return JSONResponse({
-        "db_url_set": bool(os.environ.get("DATABASE_URL")),
-        "db_url_prefix": db_url[:40] + "..." if len(db_url) > 40 else db_url,
-        "vercel": os.environ.get("VERCEL", "not set"),
-        "cwd": os.getcwd(),
-        "init_error": _init_error,
-        "login_template_exists": os.path.exists("templates/auth/login.html"),
-        "templates_dir_exists": os.path.exists("templates"),
-        "template_files": template_files[:20],
-    })
 
 
 def init_db():
