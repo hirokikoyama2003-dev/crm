@@ -11,7 +11,11 @@ if DATABASE_URL.startswith("postgres://"):
     DATABASE_URL = DATABASE_URL.replace("postgres://", "postgresql://", 1)
 
 # SQLite のみ check_same_thread が必要
-connect_args = {"check_same_thread": False} if DATABASE_URL.startswith("sqlite") else {}
+# Supabase（PostgreSQL）は SSL 必須
+if DATABASE_URL.startswith("sqlite"):
+    connect_args = {"check_same_thread": False}
+else:
+    connect_args = {"sslmode": "require"}
 
 engine = create_engine(DATABASE_URL, connect_args=connect_args)
 
