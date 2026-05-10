@@ -24,7 +24,7 @@ CONTACT_TYPE_LABELS = {
 }
 
 PROPERTY_TYPES = ["一戸建て", "マンション", "土地", "土地+建物", "投資用", "その他"]
-FLOOR_PLANS = ["1K", "1DK", "1LDK", "2LDK", "3LDK", "4LDK", "4LDK以上"]
+FLOOR_PLANS = ["1K", "1DK", "1LDK", "2K", "2DK", "2LDK", "3K", "3DK", "3LDK", "4LDK", "5LDK以上"]
 RESIDENCE_TYPES = ["自己所有マンション", "自己所有戸建", "賃貸マンション", "賃貸アパート", "賃貸戸建", "公営賃貸マンション", "社宅", "その他"]
 PURCHASE_PURPOSES = ["自己居住", "投資", "親族用", "その他"]
 PLANNED_PERIODS = ["3ヶ月以内", "6ヶ月以内", "1年以内", "2年以内", "未定"]
